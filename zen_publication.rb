@@ -10,7 +10,8 @@ STATS_LINK_BASE = 'https://zen.yandex.ru/media-api/publication-view-stat?publica
 # ZenPublicatiob
 class ZenPublication
   attr_accessor :title, :cover, :body, :link, :published_at, :publication_id,
-                :views, :views_till_end, :sum_view_time_sec, :comments
+                :views, :views_till_end, :sum_view_time_sec, :comments, :tags,
+                :slug, :desciption
 
   def initialize(document)
     @document = Nokogiri::HTML(document)
@@ -21,6 +22,23 @@ class ZenPublication
     "#<ZenPublication title=\"#{title}\" published_at=\"#{published_at}\">"
   end
 
+  def stats_to_hash
+    {
+      views: views,
+      views_till_end: views_till_end,
+      sum_view_time_sec: sum_view_time_sec,
+      comments: comments
+    }
+  end
+
+  def script_tag_data_to_hash
+    {
+      slug: slug,
+      tags: tags,
+      desciption: desciption
+    }
+  end
+
   def to_hash
     {
       title: title,
@@ -28,12 +46,8 @@ class ZenPublication
       body: body,
       lang: lang,
       link: link,
-      published_at: published_at,
-      views: views,
-      views_till_end: views_till_end,
-      sum_view_time_sec: sum_view_time_sec,
-      comments: comments
-    }
+      published_at: published_at
+    }.merge stats_to_hash, script_tag_data_to_hash
   end
 
   def tt?
@@ -50,6 +64,7 @@ class ZenPublication
     parse_title!
     parse_body!
     parse_images!
+    parse_script_tag!
     fetch_stats!
   end
 
@@ -72,8 +87,17 @@ class ZenPublication
   end
 
   def parse_images!
-    @images = @document.css('.article-image__image').map { |img| img.attr('src') }
+    image_nodes = @document.css('.article-image__image')
+    @images = image_nodes.map { |img| img.attr('src') }
     @cover = !@images.empty? && @images.first
+  end
+
+  def parse_script_tag!
+    init_data_node = @document.css('script#init_data[type="application/json"]')
+    init_data = JSON.parse init_data_node.text
+    @tags = init_data['publication']['tags'].map { |tag| tag['title'] }
+    @slug = init_data['publication']['titleForUrl']
+    @desciption = init_data['publication']['content']['preview']['snippet']
   end
 
   def fetch_stats!

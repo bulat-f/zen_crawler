@@ -1,9 +1,7 @@
 # frozen_string_literal: true
 
-require 'nokogiri'
 require 'rest-client'
 require 'json'
-require 'uri'
 require_relative 'zen_channel'
 require_relative 'zen_publication'
 
@@ -26,7 +24,7 @@ end
 
 parsed_data.filter! { |article| !article[:title].empty? }
 output = File.open('result.json', 'w')
-output.write(parsed_data.to_json)
+output.write(JSON.pretty_generate(parsed_data))
 output.close
 
 ratio_of_tt = tt_count.to_f / parsed_data.length * 100
