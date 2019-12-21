@@ -2,6 +2,7 @@
 
 require 'nokogiri'
 require 'uri'
+require 'rest-client'
 require 'json'
 
 STATS_LINK_BASE = 'https://zen.yandex.ru/media-api/publication-view-stat?publicationId='

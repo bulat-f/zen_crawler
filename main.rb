@@ -4,18 +4,25 @@ require 'nokogiri'
 require 'rest-client'
 require 'json'
 require 'uri'
+require_relative 'zen_channel'
 require_relative 'zen_publication'
 
 input = File.open('index.html', 'r')
 data = input.read
 input.close
 
-page = Nokogiri::HTML(data)
+CHANNEL_ID = '5b81707d5d36b000af9e8529'
+
+channel = ZenChannel.new(CHANNEL_ID)
+
+puts 'Fetching changel publications list'
+channel.fetch_all!
+puts 'Publications list is fetched'
 
 tt_count = 0
 
-parsed_data = page.css('a.card-image-view__clickable').map do |link|
-  publication = ZenPublication.new(RestClient.get(link['href']))
+parsed_data = channel.items.map do |link|
+  publication = ZenPublication.new RestClient.get(link)
   print '.'
   tt_count += 1 if publication.tt?
   publication.to_hash
