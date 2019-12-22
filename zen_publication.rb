@@ -22,20 +22,21 @@ class ZenPublication
     "#<ZenPublication title=\"#{title}\" published_at=\"#{published_at}\">"
   end
 
+  # notice! some hash keys don't match attributes
   def stats_to_hash
     {
-      views: views,
-      views_till_end: views_till_end,
+      views_count: views,
+      views_till_end_count: views_till_end,
       sum_view_time_sec: sum_view_time_sec,
-      comments: comments
+      comments_count: comments,
+      description: desciption
     }
   end
 
   def script_tag_data_to_hash
     {
       slug: slug,
-      tags: tags,
-      desciption: desciption
+      tags: tags
     }
   end
 
