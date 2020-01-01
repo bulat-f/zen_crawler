@@ -29,14 +29,12 @@ class ZenPublication
       views_till_end_count: views_till_end,
       sum_view_time_sec: sum_view_time_sec,
       comments_count: comments,
-      description: desciption
     }
   end
 
   def script_tag_data_to_hash
     {
       slug: slug,
-      tags: tags
     }
   end
 
@@ -94,11 +92,9 @@ class ZenPublication
   end
 
   def parse_script_tag!
-    init_data_node = @document.css('script#init_data[type="application/json"]')
-    init_data = JSON.parse init_data_node.text
-    @tags = init_data['publication']['tags'].map { |tag| tag['title'] }
-    @slug = init_data['publication']['titleForUrl']
-    @desciption = init_data['publication']['content']['preview']['snippet']
+    array_of_slug_parts = URI(@link).path.split('/').last.split('-')
+    array_of_slug_parts.pop
+    @slug = array_of_slug_parts.join('-')
   end
 
   def fetch_stats!
