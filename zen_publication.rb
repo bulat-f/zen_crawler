@@ -7,11 +7,14 @@ require 'json'
 
 STATS_LINK_BASE = 'https://zen.yandex.ru/media-api/publication-view-stat?publicationId='
 
+DESCRIPTION_MAX_LEN = 256
+SENTENCE_SEPARATOR = /([\.\?\!])/.freeze
+
 # ZenPublicatiob
 class ZenPublication
   attr_accessor :title, :cover, :body, :link, :published_at, :publication_id,
                 :views, :views_till_end, :sum_view_time_sec, :comments, :tags,
-                :slug, :desciption
+                :slug, :description
 
   def initialize(document)
     @document = Nokogiri::HTML(document)
@@ -28,13 +31,13 @@ class ZenPublication
       views_count: views,
       views_till_end_count: views_till_end,
       sum_view_time_sec: sum_view_time_sec,
-      comments_count: comments,
+      comments_count: comments
     }
   end
 
   def script_tag_data_to_hash
     {
-      slug: slug,
+      slug: slug
     }
   end
 
@@ -43,6 +46,7 @@ class ZenPublication
       title: title,
       cover: cover,
       body: body,
+      description: description,
       lang: lang,
       link: link,
       published_at: published_at
@@ -74,15 +78,17 @@ class ZenPublication
   end
 
   def parse_title!
-    @title = @document.css('.article__title').text
+    @title = @document.css('.article__title').text.strip
   end
 
   def parse_body!
     body_blocks = @document.css('.article-render__block').map do |block|
       block.text.strip
     end
+    body_blocks.filter! { |block| !block.nil? && !block.empty? }
 
     @body = body_blocks.join("\n")
+    build_description! body_blocks.first if body_blocks.first
   end
 
   def parse_images!
@@ -107,5 +113,21 @@ class ZenPublication
 
   def lang
     @lang ||= body.include?('ә') ? 'tt' : 'ru'
+  end
+
+  def build_description!(paragraph)
+    if paragraph.length < DESCRIPTION_MAX_LEN
+      @description = paragraph
+    else
+      @description = ''
+      sentences = paragraph.split SENTENCE_SEPARATOR
+      sentences << '.' if sentences.length.odd?
+      cursor = 0
+      while @description.length < DESCRIPTION_MAX_LEN / 2
+        @description += sentences[cursor] + sentences[cursor + 1]
+        cursor += 2
+        break if cursor >= sentences.length
+      end
+    end
   end
 end

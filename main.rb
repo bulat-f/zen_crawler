@@ -23,8 +23,8 @@ parsed_data = channel.items.map do |link|
 end
 
 parsed_data.filter! { |article| !article[:title].empty? }
+parsed_data.uniq! { |article| article[:slug] }
 parsed_data.reverse!
-parsed_data.uniq! { |publication| publication[:slug] }
 
 output = File.open('result.json', 'w')
 output.write(JSON.pretty_generate(parsed_data))
